@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#E5E0D0">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="れいか">
+<title>れいか｜二十四節気占い</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E5E0D0; --paper-2:#EDE9DC; --ink:#211E17; --ink-soft:#6A6350; --line:#C7C0AC;
+    --spring:#6E9A4E; --summer:#BE4038; --autumn:#C1782B; --winter:#3C5C79;
+    --accent:var(--ink); --tint:transparent;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:"Zen Kaku Gothic New",sans-serif;background:var(--paper);color:var(--ink);
+    min-height:100vh;line-height:1.85;display:flex;justify-content:center;padding:28px 18px 64px;
+    background-image:radial-gradient(circle at 50% -10%, rgba(255,255,255,.35), transparent 55%);}
+  .wrap{width:100%;max-width:560px}
+  .mincho{font-family:"Shippori Mincho B1",serif}
+
+  .mast{text-align:center;margin-bottom:24px}
+  .brand{font-family:"Shippori Mincho B1",serif;font-weight:800;font-size:52px;letter-spacing:.14em;line-height:1;color:var(--ink);text-indent:.14em}
+  .brand-en{font-size:11px;letter-spacing:.5em;text-indent:.5em;color:var(--ink-soft);margin-top:14px;text-transform:uppercase}
+  .rule{display:flex;align-items:center;gap:12px;margin:20px auto 0;max-width:300px;color:var(--ink-soft)}
+  .rule::before,.rule::after{content:"";flex:1;height:1px;background:var(--line)}
+  .rule span{font-family:"Shippori Mincho B1",serif;font-size:13px;letter-spacing:.35em;text-indent:.35em}
+
+  .wheel-box{display:flex;justify-content:center;margin:12px 0 20px}
+  svg.wheel{width:290px;height:290px;overflow:visible}
+  .wheel .spoke{stroke:var(--line);stroke-width:1}
+  .wheel .term{font-family:"Shippori Mincho B1",serif;font-size:14px;fill:var(--ink-soft);transition:fill .5s}
+  .wheel .term.on{fill:var(--accent);font-weight:800;font-size:17px}
+  .wheel .marker{fill:none;stroke:var(--accent);stroke-width:2.4;opacity:0;transition:opacity .6s}
+  .wheel .marker.show{opacity:1}
+  .wheel .core{font-family:"Shippori Mincho B1",serif;fill:var(--ink)}
+
+  .panel{background:var(--paper-2);border:1px solid var(--line);padding:26px 24px 28px;position:relative}
+  .panel::before{content:"";position:absolute;inset:5px;border:1px solid var(--line);pointer-events:none}
+  .lead{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:22px}
+  .lead b{color:var(--ink);font-weight:700}
+  .field-row{display:flex;gap:10px;justify-content:center;margin-bottom:20px}
+  .field{flex:1;max-width:150px}
+  .field label{display:block;font-size:11px;letter-spacing:.2em;color:var(--ink-soft);margin-bottom:6px;text-align:center}
+  .field input{width:100%;text-align:center;font-family:"Shippori Mincho B1",serif;font-size:22px;padding:10px 4px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:0;-moz-appearance:textfield}
+  .field input::-webkit-outer-spin-button,.field input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .field input:focus{outline:2px solid var(--ink);outline-offset:1px}
+  .cast{display:block;width:100%;margin-top:4px;font-family:"Shippori Mincho B1",serif;font-weight:700;font-size:18px;letter-spacing:.3em;text-indent:.3em;padding:14px;color:var(--paper);background:var(--ink);border:none;cursor:pointer;transition:transform .15s,background .3s}
+  .cast:hover{background:#39342a}.cast:active{transform:translateY(1px)}
+  .cast:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  .err{color:var(--summer);font-size:13px;text-align:center;min-height:20px;margin-top:10px}
+
+  .result{margin-top:26px;display:none}
+  .result.show{display:block;animation:rise .7s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .rcard{border:1px solid var(--line);background:linear-gradient(var(--tint),var(--tint)),var(--paper-2);padding:30px 26px;position:relative}
+  .rcard::after{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--accent)}
+  .season-tag{font-size:12px;letter-spacing:.4em;text-indent:.4em;color:var(--accent);font-weight:700}
+  .type-name{font-family:"Shippori Mincho B1",serif;font-weight:800;font-size:46px;letter-spacing:.08em;line-height:1.15;margin:6px 0 2px;color:var(--ink)}
+  .type-yomi{font-size:13px;letter-spacing:.3em;color:var(--ink-soft);margin-bottom:16px}
+  .essence{font-family:"Shippori Mincho B1",serif;font-size:20px;font-weight:500;line-height:1.7;color:var(--ink);padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .depth{display:flex;align-items:baseline;gap:8px;margin-top:16px;color:var(--ink-soft);font-size:12px;letter-spacing:.15em;flex-wrap:wrap}
+  .depth b{font-family:"Shippori Mincho B1",serif;font-size:26px;color:var(--accent);font-weight:800;letter-spacing:0}
+
+  .read{margin-top:24px}
+  .read section{margin-bottom:20px}
+  .read h3{font-family:"Shippori Mincho B1",serif;font-size:15px;font-weight:700;letter-spacing:.2em;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;gap:10px}
+  .read h3::before{content:"";width:16px;height:1px;background:var(--accent)}
+  .read p{font-size:14.5px;color:var(--ink)}
+
+  /* 深度フェーズ */
+  .phase-box{background:var(--paper);border:1px solid var(--line);padding:14px 16px}
+  .phase-head{font-family:"Shippori Mincho B1",serif;font-weight:700;color:var(--ink);font-size:16px;margin-bottom:4px}
+  .phase-head span{color:var(--accent)}
+
+  /* 運気リズム帯 */
+  .rhythm{display:flex;gap:6px;margin-top:6px}
+  .ryear{flex:1;text-align:center;background:var(--paper);border:1px solid var(--line);padding:8px 2px;position:relative}
+  .ryear.now{border-color:var(--accent);border-width:2px;background:linear-gradient(var(--tint),var(--tint)),var(--paper)}
+  .ryear .yy{font-size:10px;color:var(--ink-soft);letter-spacing:.05em}
+  .ryear .ph{font-family:"Shippori Mincho B1",serif;font-size:13px;font-weight:700;color:var(--ink);margin-top:3px;line-height:1.3}
+  .ryear.now .ph{color:var(--accent)}
+
+  /* 2026 */
+  .y26{background:var(--paper);border:1px solid var(--line);padding:16px 18px}
+  .y26 .cap{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+  .y26 .cap .ph{font-family:"Shippori Mincho B1",serif;font-size:22px;font-weight:800;color:var(--accent)}
+  .y26 .cap .yr{font-size:12px;letter-spacing:.2em;color:var(--ink-soft)}
+  .y26 dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13.5px}
+  .y26 dt{font-family:"Shippori Mincho B1",serif;color:var(--accent);font-weight:700;white-space:nowrap}
+  .y26 dd{color:var(--ink)}
+  .y26 .luck{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-soft);display:flex;gap:16px;flex-wrap:wrap}
+  .y26 .luck b{color:var(--ink)}
+  .swatch{display:inline-block;width:11px;height:11px;border:1px solid var(--line);vertical-align:-1px;margin-right:4px}
+
+  /* 恋愛 深掘り */
+  .love-toggle{margin-top:2px;font-family:"Zen Kaku Gothic New",sans-serif;font-size:12.5px;letter-spacing:.15em;color:var(--accent);background:none;border:1px solid var(--line);padding:7px 16px;cursor:pointer;transition:background .2s}
+  .love-toggle:hover{background:var(--paper)}
+  .love-more{display:none;margin-top:12px}
+  .love-more.open{display:block;animation:rise .5s ease both}
+  .love-dl{background:var(--paper);border:1px solid var(--line);padding:14px 16px;display:grid;grid-template-columns:auto 1fr;gap:9px 14px;font-size:13.5px}
+  .love-dl dt{font-family:"Shippori Mincho B1",serif;color:var(--accent);font-weight:700;white-space:nowrap}
+  .love-dl dd{color:var(--ink)}
+  .love-capture{margin-top:10px;background:linear-gradient(var(--tint),var(--tint)),var(--paper);border:1px solid var(--accent);padding:13px 16px}
+  .love-capture .ct{font-family:"Shippori Mincho B1",serif;font-weight:700;color:var(--accent);font-size:14px;margin-bottom:3px}
+  .love-capture p{font-size:13.5px;color:var(--ink)}
+  .peak{margin-top:14px}
+  .peak .pt{font-family:"Shippori Mincho B1",serif;font-weight:700;color:var(--accent);font-size:14px;margin-bottom:7px;display:flex;align-items:center;gap:9px}
+  .peak .pt::before{content:"";width:14px;height:1px;background:var(--accent)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{background:var(--paper);border:1px solid var(--line);padding:7px 12px;text-align:center;min-width:74px}
+  .chip .cy{font-family:"Shippori Mincho B1",serif;font-weight:800;font-size:16px;color:var(--ink)}
+  .chip .cl{font-size:10.5px;color:var(--ink-soft);letter-spacing:.03em;margin-top:1px}
+  .chip.top{border-color:var(--accent);border-width:2px}
+  .peak .none{font-size:12.5px;color:var(--ink-soft)}
+  .aisho{display:flex;gap:12px;margin-top:8px}
+  .aisho div{flex:1;background:var(--paper);border:1px solid var(--line);padding:12px 10px;text-align:center}
+  .aisho .k{font-size:11px;letter-spacing:.2em;color:var(--ink-soft);margin-bottom:4px}
+  .aisho .v{font-family:"Shippori Mincho B1",serif;font-size:19px;font-weight:700;color:var(--ink)}
+
+  .again{display:block;margin:26px auto 0;font-size:13px;letter-spacing:.3em;text-indent:.3em;color:var(--ink-soft);background:none;border:1px solid var(--line);padding:11px 26px;cursor:pointer;font-family:"Zen Kaku Gothic New",sans-serif;transition:border-color .2s,color .2s}
+  .again:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* 相性マトリクス */
+  .matrix-wrap{margin-top:40px}
+  .mtitle{text-align:center;font-family:"Shippori Mincho B1",serif;font-weight:700;font-size:18px;letter-spacing:.25em;text-indent:.25em;margin-bottom:4px}
+  .msub{text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:16px}
+  .mscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);background:var(--paper-2)}
+  table.matrix{border-collapse:collapse;margin:0 auto;font-size:11px}
+  table.matrix th,table.matrix td{width:30px;height:30px;text-align:center;border:1px solid var(--line);padding:0}
+  table.matrix th{font-family:"Shippori Mincho B1",serif;font-weight:700;color:var(--ink-soft);font-size:10px;background:var(--paper)}
+  table.matrix th.corner{background:var(--paper-2)}
+  table.matrix td{cursor:pointer;font-weight:700;font-size:13px}
+  td.m2{color:#8a8470}   /* △ */
+  td.m1{color:var(--autumn)} /* ○ */
+  td.m0{color:var(--summer)} /* ◎ */
+  td.self{background:var(--ink);color:var(--paper)}
+  td.sel{outline:2px solid var(--ink);outline-offset:-2px}
+  tr.hl th.rowh,td.colhl{color:var(--ink);background:#e0d9c4}
+  .mdetail{margin-top:14px;background:var(--paper-2);border:1px solid var(--line);padding:16px 18px;min-height:78px}
+  .mdetail .pair{font-family:"Shippori Mincho B1",serif;font-size:17px;font-weight:700;margin-bottom:4px}
+  .mdetail .pair em{font-style:normal;color:var(--accent)}
+  .mdetail .lbl{display:inline-block;font-size:12px;letter-spacing:.15em;color:var(--paper);background:var(--accent);padding:1px 10px;margin-bottom:8px}
+  .mdetail p{font-size:13.5px;color:var(--ink)}
+  .mdetail .hint{color:var(--ink-soft);font-size:12.5px}
+  .legend{display:flex;justify-content:center;gap:18px;margin-top:12px;font-size:12px;color:var(--ink-soft)}
+  .legend b{font-size:14px}
+
+  .foot{text-align:center;font-size:11px;color:var(--ink-soft);margin-top:38px;letter-spacing:.1em;line-height:1.9}
+
+  @media(max-width:420px){.brand{font-size:44px}.type-name{font-size:38px}svg.wheel{width:250px;height:250px}
+    .rhythm{gap:4px}.ryear .ph{font-size:12px}}
+  @media(prefers-reduced-motion:reduce){.result.show{animation:none}.marker,.term{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <div class="brand mincho">れいか</div>
+    <div class="brand-en">Reika &middot; Sekki Astrology</div>
+    <div class="rule"><span>二十四節気占い</span></div>
+  </header>
+
+  <div class="wheel-box"><svg class="wheel" id="wheel" viewBox="-150 -150 300 300" aria-hidden="true"></svg></div>
+
+  <div class="panel">
+    <p class="lead">生まれた日に宿る<b>“内なる季節”</b>と、<br>これから巡る<b>運気の流れ</b>を読み解きます。</p>
+    <div class="field-row">
+      <div class="field"><label>YEAR 年</label><input id="y" type="number" inputmode="numeric" placeholder="1990"></div>
+      <div class="field"><label>MONTH 月</label><input id="m" type="number" inputmode="numeric" placeholder="6"></div>
+      <div class="field"><label>DAY 日</label><input id="d" type="number" inputmode="numeric" placeholder="25"></div>
+    </div>
+    <button class="cast" id="cast">占&nbsp;う</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="result" id="result" aria-live="polite">
+    <div class="rcard" id="rcard">
+      <div class="season-tag" id="seasonTag"></div>
+      <div class="type-name mincho" id="typeName"></div>
+      <div class="type-yomi" id="typeYomi"></div>
+      <div class="essence mincho" id="essence"></div>
+      <div class="depth">深度ナンバー<b id="depthNum"></b><span id="yinyang"></span></div>
+
+      <div class="read">
+        <section><h3>本質</h3><p id="rSei"></p></section>
+        <section><h3>恋愛</h3><p id="rRen" style="margin-bottom:10px"></p>
+          <button class="love-toggle" id="loveToggle">＋ 恋愛をもっと詳しく</button>
+          <div class="love-more" id="loveMore">
+            <dl class="love-dl">
+              <dt>恋のはじまり</dt><dd id="lvFall"></dd>
+              <dt>本命への態度</dt><dd id="lvHon"></dd>
+              <dt>冷めるスイッチ</dt><dd id="lvCool"></dd>
+              <dt>結婚観</dt><dd id="lvMar"></dd>
+            </dl>
+            <div class="love-capture">
+              <div class="ct">攻略のヒント</div><p id="lvCap"></p>
+            </div>
+            <div class="peak">
+              <div class="pt">恋の見頃（恋愛運が高まる年）</div>
+              <div class="chips" id="lvPeak"></div>
+            </div>
+          </div>
+        </section>
+        <section><h3>仕事</h3><p id="rShi"></p></section>
+        <section><h3>開運の鍵</h3><p id="rKai"></p></section>
+
+        <section><h3>深度フェーズ</h3>
+          <div class="phase-box">
+            <div class="phase-head"><span id="phName"></span>　—　<span id="phTtl" style="color:var(--ink)"></span></div>
+            <p id="phDesc" style="font-size:13.5px"></p>
+          </div>
+        </section>
+
+        <section><h3>運気の巡り</h3>
+          <p style="font-size:13px;color:var(--ink-soft);margin-bottom:8px" id="rhythmNote"></p>
+          <div class="rhythm" id="rhythm"></div>
+        </section>
+
+        <section><h3>2026年の運勢</h3>
+          <div class="y26">
+            <div class="cap"><span class="ph" id="y26ph"></span><span class="yr">2026年 &middot; 丙午</span></div>
+            <dl>
+              <dt>総合</dt><dd id="y26all"></dd>
+              <dt>恋愛</dt><dd id="y26love"></dd>
+              <dt>仕事</dt><dd id="y26work"></dd>
+              <dt>金運</dt><dd id="y26money"></dd>
+            </dl>
+            <div class="luck">
+              <span><b>開運アクション</b>　<span id="y26act"></span></span>
+              <span><b>ラッキーカラー</b>　<span id="y26color"></span></span>
+            </div>
+          </div>
+        </section>
+
+        <section><h3>相性</h3>
+          <div class="aisho">
+            <div><div class="k">調和する</div><div class="v" id="aWa"></div></div>
+            <div><div class="k">惹かれ合う</div><div class="v" id="aHi"></div></div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <button class="again" id="again">もう一度占う</button>
+  </div>
+
+  <!-- 相性マトリクス -->
+  <div class="matrix-wrap">
+    <div class="mtitle">相性早見表</div>
+    <div class="msub">縦のタイプ（あなた）× 横のタイプ（相手）／ マスをタップで詳細</div>
+    <div class="mscroll"><table class="matrix" id="matrix"></table></div>
+    <div class="legend"><span><b style="color:var(--summer)">◎</b> 好相性</span><span><b style="color:var(--autumn)">○</b> 良い刺激</span><span><b style="color:#8a8470">△</b> 学びの縁</span></div>
+    <div class="mdetail" id="mdetail"><p class="hint">気になる2タイプのマスをタップすると、相性の読み解きが表示されます。</p></div>
+  </div>
+
+  <p class="foot">れいか｜二十四節気占い &nbsp;/&nbsp; 六十干支の日の巡りを土台に、<br>十二節気の元型と運気の循環へ照らす独自鑑定法。</p>
+</div>
+
+<script>
+/* ================= データ ================= */
+const TYPES = [
+  { name:"立春", yomi:"りっしゅん", tag:"春 ・ 芽吹きの節",
+    ess:"まだ寒さの残る大地に、最初に芽を出す先駆けの人。",
+    sei:"誰よりも早く動き出す開拓者。皆がためらう場面で最初の一歩を踏み出せる、明るく純粋な行動派です。ゼロから始めるのが得意な反面、続けるより始めることに心が向きやすく、飽きっぽさが顔を出します。裏表がなく、その場を一瞬で温める力があります。",
+    ren:"ひと目で火がつく直感型。追いかけている時がいちばん輝きます。刺激が薄れると熱が冷めやすいので、いつも新しい景色を一緒に見られる相手と長続きします。",
+    shi:"立ち上げ・企画・新規開拓で本領を発揮。決まりきった作業より、前例のない場面で強さが出ます。肩書きより「面白いか」で動くタイプ。",
+    kai:"新しい場所と初対面の人が、あなたの燃料。迷ったら“まだ行ったことのない方”へ。" },
+  { name:"春分", yomi:"しゅんぶん", tag:"春 ・ 均衡の節",
+    ess:"昼と夜が等しく分かれる日に生まれた、調和の人。",
+    sei:"対立の間に立ち、場をやわらかくまとめる天性の外交官。誰とでも合わせられる優しさが最大の魅力ですが、自分の本音を後回しにしがち。八方美人に見られることを恐れる一方、内側の意志は見た目よりずっと強く、ここぞでは折れません。",
+    ren:"相手に寄り添う優しさが持ち味。ただ合わせすぎて疲れてしまうことも。遠慮なく意見を言い合える対等な相手だと、本来の輝きが戻ります。",
+    shi:"調整役・交渉・接客など、人と人の間で真価を発揮。板挟みのストレスをためこみやすいので、線引きを意識すると安定します。",
+    kai:"「NO」と言える勇気。断ることは、あなたを雑に扱わないための優しさです。" },
+  { name:"穀雨", yomi:"こくう", tag:"春 ・ 育みの節",
+    ess:"春の終わり、作物を潤す恵みの雨のような養い手。",
+    sei:"人やものを静かに育てる存在。派手さはないのに、あなたがいると周りが伸びていく――そんな縁の下の力を持っています。忍耐強く面倒見がよい反面、尽くしすぎて自分を後回しにしがち。芽が育つのを待てる、数少ない大人の器です。",
+    ren:"一途で献身的。時間をかけて愛を育てるリアリストです。尽くした分をきちんと言葉で返してくれる相手と、長く穏やかに続きます。",
+    shi:"教育・育成・サポート・裏方のまとめ役。人を伸ばす仕事で花開きます。成果を独り占めしないところが信頼を呼びます。",
+    kai:"自分にも“雨”を降らせること。人を潤す前に、まず自分の畑を潤して。" },
+  { name:"立夏", yomi:"りっか", tag:"夏 ・ 疾走の節",
+    ess:"初夏の風のように、勢いよく駆け出すムードメーカー。",
+    sei:"エネルギッシュで行動的。ノリと勢いで場を引っ張り、感情がそのまま表に出る正直者です。細かい計画より体当たり。大雑把で飽きっぽいのが玉に瑕ですが、その明るさと素直さが何よりの武器になります。",
+    ren:"情熱的でまっすぐ。好きになったら一直線で、駆け引きは苦手。わかりやすい愛情を返してくれる相手に安心します。",
+    shi:"スピード勝負・現場・チームを盛り上げる役どころ。緻密さより「勢い」で結果を出します。停滞した空気を動かす起爆剤に。",
+    kai:"体を動かすこと。汗をかいた分だけ、運の巡りも速くなります。" },
+  { name:"夏至", yomi:"げし", tag:"夏 ・ 極まりの節",
+    ess:"一年でいちばん陽が長い日。いるだけで中心になる人。",
+    sei:"堂々とした存在感を放つカリスマ。面倒見がよく、頼られると燃える親分肌です。プライドが高く、弱みを見せるのは苦手。光が強いぶん、ひとりになると気疲れという深い影も抱えます。人を惹きつけ、率いる星のもとにあります。",
+    ren:"守り、リードしたい主導権型。尽くされるより、頼られて支える側で輝きます。プライドをそっと立ててくれる相手と長く続きます。",
+    shi:"リーダー・経営・人前に立つ仕事。裏方より表舞台でこそ真価を発揮します。決断力が周囲の安心になります。",
+    kai:"弱音を吐ける相手をひとり持つこと。強さは、緩める場所があってこそ続きます。" },
+  { name:"大暑", yomi:"たいしょ", tag:"夏 ・ 灼熱の節",
+    ess:"暑さが極まる時期。内に激しい情熱を秘めた求道者。",
+    sei:"表は穏やかでも、芯はいつも燃えている人。強い信念とこだわりを持ち、ここぞで爆発的な力を出す職人肌です。妥協せず一点を極めるタイプで、干渉されるのを嫌います。自分のペースを崩されると乱れるので、静かな環境が力になります。",
+    ren:"一度好きになると誰よりも深い。ミステリアスで本音を隠しがちですが、素を出せる相手を見つけると驚くほど安定します。",
+    shi:"専門職・職人・研究など、一点集中で極める分野。分業より、ひとりで没頭できる仕事が向いています。",
+    kai:"熱を逃がす“余白”の時間。何もしない一日が、次の集中力を生みます。" },
+  { name:"白露", yomi:"はくろ", tag:"秋 ・ 清らの節",
+    ess:"秋の草に朝露が結ぶころ。透明感をまとう感性の人。",
+    sei:"繊細で美意識が高く、人の心の機微に敏感。静かに人を癒す上品さがあり、清潔感と佇まいで自然と好感を集めます。傷つきやすく、雑な環境や乱暴な言葉が苦手。その感受性こそが、あなたにしか作れない世界の源です。",
+    ren:"第一印象と雰囲気を大切にする理想主義者。居心地のよい空間をつくれる相手に強く惹かれます。丁寧に扱われることで心を開きます。",
+    shi:"美・デザイン・言葉・接遇など、感性を扱う分野が天職。細やかな気づきと審美眼が武器になります。",
+    kai:"美しいものと、清潔で静かな空間に身を置くこと。環境があなたを整えます。" },
+  { name:"秋分", yomi:"しゅうぶん", tag:"秋 ・ 明晰の節",
+    ess:"実りの季節に昼夜が均衡する日。俯瞰する戦略家。",
+    sei:"公平で理知的、物事を一段高いところから整理するのが得意。感情より論理で動く冷静沈着さで、正確な判断を下します。合理的すぎて冷たく見られることもありますが、その奥には静かな優しさと責任感が流れています。",
+    ren:"ひと目惚れより、理解を積み重ねて育つ愛。ムードに流されず、信頼できる相手をじっくり選びます。落ち着いた関係で安定します。",
+    shi:"分析・企画・管理・戦略。構造やデータを扱う仕事で真価を発揮します。全体像を描ける数少ない設計者タイプ。",
+    kai:"ときには理屈を手放して、感情のままに選んでみること。心も大切な羅針盤です。" },
+  { name:"霜降", yomi:"そうこう", tag:"秋 ・ 深まりの節",
+    ess:"晩秋、初霜が降りるころ。静かな深みをたたえる人。",
+    sei:"多くを語らず、経験から本質を見抜く大人の気質。孤高を好み、群れません。冷めているように見えて、選んだ少数の人には深く尽くします。渋みと風格が年々増していく、時間を味方につけるタイプです。",
+    ren:"数より質。心を開くまで時間はかかりますが、開いた相手には一途で深い愛を注ぎます。静かで長い絆を結びます。",
+    shi:"専門性・鑑定眼・審査・熟練を要する分野。積み上げた年月がそのまま評価に変わります。急がず極める道が吉。",
+    kai:"ひとりの時間を惜しまないこと。沈黙の中で、あなたの眼はいっそう澄みます。" },
+  { name:"立冬", yomi:"りっとう", tag:"冬 ・ 備えの節",
+    ess:"冬の入り口、寒さに備えて力を蓄える堅実な人。",
+    sei:"計画的にコツコツ積み上げる努力家。派手さはなくても、信頼の厚さは随一です。慎重ゆえに動き出しは遅く、心配性な一面も。ですが守りに入ったときの強さと、土台をつくる確かさは、誰にも真似できません。",
+    ren:"慎重にゆっくり距離を縮めます。安定と誠実さを何より重んじ、長く続く関係を大切に育てます。焦らせない相手が合います。",
+    shi:"積み上げ型・管理・堅実な実務。時間をかけて信頼で仕事を得ていきます。地に足のついた成果が持ち味。",
+    kai:"小さな一歩を、ほかでもない“今日”踏み出すこと。備えは動いて初めて力になります。" },
+  { name:"冬至", yomi:"とうじ", tag:"冬 ・ 回帰の節",
+    ess:"最も夜が長く、そこから陽が甦る転換点に生まれた人。",
+    sei:"どん底から光を生み出す再生の星。逆境に強く、苦しい局面でこそ底力を出します。物静かでありながら、内に強い意志と希望を秘め、そばにいる人へ静かな安心感を与えます。終わりを始まりに変えられる、稀有な力の持ち主です。",
+    ren:"派手さより深い絆を選ぶ愛。相手が弱ったときに支える強さがあります。試練を越えて結ばれる縁に恵まれます。",
+    shi:"立て直し・再建・粘り強い長期戦。誰もが諦めた場面で頼られる存在です。折れない継続力が最大の資産。",
+    kai:"いちばん暗いときこそ「もうすぐ明ける」と信じること。夜明けは必ずあなたの側にあります。" },
+  { name:"大寒", yomi:"だいかん", tag:"冬 ・ 究極の節",
+    ess:"寒さが極まる時期。静けさに鋼の意志を秘めた孤高の人。",
+    sei:"感情を表に出さず、ぶれない軸を持つ求道者。妥協せず、決めたことは静かにやり遂げます。近寄りがたく見えて、内側は驚くほど熱い。派手な承認を求めず、自分の基準だけを頼りに、一つの道を静かに歩み通します。",
+    ren:"心を許すまで最も時間がかかりますが、一度決めれば生涯級の一途さ。派手さより、揺るがない信頼を捧げます。",
+    shi:"研究・求道・一つの道を極める分野。孤独に強く、長い時間をかけた達成に向きます。静かな執念が実を結びます。",
+    kai:"沈黙の中で自分の芯を確かめること。ざわめきを離れるほど、あなたは強くなります。" },
+];
+
+// 深度フェーズ（5段階）＝ 12タイプ × 5 = 60種
+const PHASES = [
+  { name:"兆し", ttl:"純度の高い理想形",
+    desc:"そのタイプの本質が最も澄んだ形で現れます。まだ荒削りですが、まっすぐで伸びしろが大きく、初々しい魅力があります。" },
+  { name:"芽",  ttl:"動き出す素直さ",
+    desc:"行動力があり、感情が素直に表に出る気。人に恵まれやすく、勢いに乗れる時。周りを巻き込む力があります。" },
+  { name:"盛り", ttl:"王道のど真ん中",
+    desc:"この節気の特徴が最も色濃く出る、タイプの王道。良くも悪くも典型的で、あなたらしさが誰の目にもわかりやすく表れます。" },
+  { name:"熟れ", ttl:"円熟と応用力",
+    desc:"余裕があり応用が利く成熟の気。面倒見がよく、隣の季節の味わいも帯び始めます。人を導く落ち着きが備わります。" },
+  { name:"名残", ttl:"次へ移ろう二面性",
+    desc:"次の節気へ移る境目の気。二面性があり複雑ですが、器用で多才。掴みどころのなさが、そのまま奥行きになります。" },
+];
+
+// 恋愛 深掘り（12タイプ書き分け）
+const LOVE = [
+  {fall:"直感で一気に落ちる瞬発型。ときめいた瞬間に「好き」を確信し、自分から動きます。",
+   hon:"全力でまっすぐ。分かりやすく尽くし、追いかけている高揚感がそのまま愛情表現になります。",
+   cool:"マンネリと束縛。同じ日常のくり返しや、行動を縛られることに一気に熱が引きます。",
+   mar:"一緒に新しいことができる“相棒”を求めます。刺激を共有できる結婚なら長続き。",
+   cap:"追わせるより、一緒に走ること。新しい体験に誘い、常に“次の楽しみ”を見せると心が離れません。"},
+  {fall:"じわじわ好きになる安心先行型。会話のテンポと居心地のよさで惹かれていきます。",
+   hon:"相手を最優先に尽くします。空気を読んで先回りする一方、我慢をため込みがち。",
+   cool:"強引さと無神経。意見を押し通されたり雑に扱われると、静かに心が離れます。",
+   mar:"対等なパートナーシップ重視。本音を言い合える相手と穏やかな家庭を築きます。",
+   cap:"意見を聞き、選ばせること。「どうしたい?」と尊重し、我慢に気づいて労うと深く信頼されます。"},
+  {fall:"時間をかけて愛を育てる遅咲き型。信頼が積もってから本気になります。",
+   hon:"献身的に支えます。相手の成長を我がことのように喜ぶ、包容力のある愛。",
+   cool:"感謝のなさ。尽くしても当然の顔をされ続けると、静かに疲れて離れます。",
+   mar:"家庭を育てることに幸せを感じます。安定と労わり合いのある結婚が理想。",
+   cap:"焦らせないこと。小さな「ありがとう」を欠かさず、あなたからも気づかうと心を開きます。"},
+  {fall:"好きになったら即行動の直球型。駆け引き抜きでストレートに気持ちを出します。",
+   hon:"オープンで明るい愛。一緒に笑い、感情を隠さずぶつける熱量があります。",
+   cool:"重い空気と回りくどさ。ネガティブや遠回しな態度が続くと冷めます。",
+   mar:"友達のように笑える結婚。明るく気楽な関係が長続きの鍵です。",
+   cap:"ノリを合わせて一緒に楽しむこと。まっすぐな好意はそのまま喜ばれます。駆け引きは逆効果。"},
+  {fall:"頼られて火がつく守護型。相手の弱さや隙に惹かれ、支えたくなります。",
+   hon:"全力で守り、リードします。頼られるほど愛が深まる親分肌の愛情。",
+   cool:"プライドを傷つけられること。人前で否定されたり軽んじられると一気に冷めます。",
+   mar:"自分を立ててくれる相手と、頼れる存在として家庭を築きたいタイプ。",
+   cap:"頼って、立てること。「あなたがいて助かる」と伝え、弱音を受け止める場になると離れません。"},
+  {fall:"内側でじっくり燃える隠れ情熱型。表に出さず、心の中で想いを深めます。",
+   hon:"一途で深い愛。素を見せられる少数の相手にだけ、静かで濃い想いを注ぎます。",
+   cool:"ペースを乱されること。詮索や束縛、生活に踏み込まれすぎると心を閉ざします。",
+   mar:"互いの世界を尊重し、干渉しすぎない結婚。静かな信頼が土台になります。",
+   cap:"詮索しないこと。共通の趣味など“素を出せる場”をつくり、距離を焦らず待てる人が刺さります。"},
+  {fall:"雰囲気と第一印象で惹かれる審美型。美しい所作や心地よい空気に恋をします。",
+   hon:"繊細に尽くします。丁寧で品のある愛情を注ぎ、相手の心の機微に寄り添います。",
+   cool:"雑さとデリカシーのなさ。乱暴な言葉や無神経な扱いで、一気に幻滅します。",
+   mar:"美しく穏やかな暮らしを共有できる相手と、心地よい家庭を望みます。",
+   cap:"丁寧さと清潔感。言葉づかいや空間を整え、繊細な感性を否定しないことが鍵です。"},
+  {fall:"理解を積み重ねて惹かれる納得型。信頼できると判断してから心を開きます。",
+   hon:"誠実で安定した愛。表現は控えめでも、約束を守り抜く堅実さで示します。",
+   cool:"理不尽と感情の押しつけ。筋の通らない態度や振り回されることに冷めます。",
+   mar:"価値観と生活設計が噛み合う相手と、対等で理性的な家庭を築きます。",
+   cap:"誠実さと一貫性。感情より信頼で近づき、約束を守り続けることで心が開きます。"},
+  {fall:"心を開くまで長い慎重型。時間をかけて“この人なら”と見極めます。",
+   hon:"少数に深く尽くします。多くを語らずとも、選んだ相手には揺るがぬ愛。",
+   cool:"軽さと詮索。距離を詰めすぎたり薄っぺらい態度に、静かに引いていきます。",
+   mar:"一人の時間を尊重し合える、成熟した落ち着いた結婚を望みます。",
+   cap:"急がないこと。適度な距離で深い会話を重ね、信頼を積むと生涯級の愛が返ります。"},
+  {fall:"慎重に確かめてから進む石橋型。安心できると分かって初めて動きます。",
+   hon:"誠実にコツコツ愛を積みます。派手さはなくても、継続と約束で信頼を示します。",
+   cool:"不安定さと衝動。先の読めない言動や約束破りが続くと心が離れます。",
+   mar:"将来設計を共有できる相手と、堅実で安定した家庭を長く築きます。",
+   cap:"焦らせず安心を積むこと。一貫した態度を見せ、将来の話を丁寧にすると信頼されます。"},
+  {fall:"深い縁を感じて結ばれる運命型。派手さより魂の繋がりで惹かれます。",
+   hon:"相手が弱った時に支える深い愛。試練を共に越えることで絆を深めます。",
+   cool:"表面的な関係と裏切り。うわべだけの付き合いや不誠実に心を閉ざします。",
+   mar:"苦楽を分かち合える相手と、支え合う絆の深い家庭を築きます。",
+   cap:"本音で向き合うこと。弱さも見せ合い、困難を一緒に越える姿勢が深い信頼を生みます。"},
+  {fall:"最も時間のかかる孤高型。心の扉は重いけれど、一度開けば一途です。",
+   hon:"生涯級の一途さ。多くは語らず、決めた相手にだけ静かに深く尽くします。",
+   cool:"軸を揺さぶられること。信念を否定されたり束縛されると、静かに離れます。",
+   mar:"互いの世界と信念を尊重し合える、静かで揺るがぬ結婚を望みます。",
+   cap:"信念を尊重すること。踏み込みすぎず時間をかけて信頼を築ければ、鋼のような愛が返ります。"},
+];
+// 恋の見頃：バイオリズムのこの位相で恋愛運が高まる
+const LOVE_PEAK = {1:"出会いの春", 3:"恋愛運の絶頂", 4:"進展・結婚に好機", 5:"愛が実る時"};
+
+// 運気の巡り（12段階）＝ 陰陽バイオリズム & 各年の運勢を駆動
+const CYCLE = [
+  { ph:"種まき", tone:"静", all:"土台をつくる仕込みの年。派手さはなくても、未来への布石が静かに積まれます。",
+    love:"焦らず縁を耕す時期。今の関係を丁寧に。", work:"準備と学びが吉。次の飛躍の設計図を描いて。", money:"貯蓄・見直し向き。守りが正解。", act:"新しい学びを始める" },
+  { ph:"芽吹き", tone:"動", all:"動き出しの年。新しい挑戦の芽が顔を出し、環境が前へ進みます。",
+    love:"新たな出会いの気配。行動が縁を呼びます。", work:"スタートに好機。手を挙げて。", money:"自己投資が活きる。", act:"小さくても一歩踏み出す" },
+  { ph:"成長", tone:"動", all:"勢いに乗る年。行動がそのまま結果につながりやすい追い風の時。",
+    love:"関係が進展しやすい。素直な一歩を。", work:"攻めが吉。挑戦に迷わないで。", money:"収入増の兆し。動いた分が返る。", act:"少し大きめの挑戦を" },
+  { ph:"開花", tone:"陽", all:"華やぐ年。これまでの努力が目に見える形になり、注目が集まります。",
+    love:"恋愛運は絶好調。ご縁が花開く時。", work:"評価が上がる。人前に出て正解。", money:"実りの時期。臨時の恵みも。", act:"人前に出て自分を見せる" },
+  { ph:"結実", tone:"陽", all:"満ちる年。成果が安定し、大切な節目を迎えやすい充実の時。",
+    love:"結婚・同棲など進展に好機。", work:"実績が積み上がり信頼に変わる。", money:"安定。長く続く形へ整えて。", act:"節目をきちんと祝う" },
+  { ph:"収穫", tone:"陽", all:"刈り取りの年。積み重ねた頑張りが、はっきりと報われます。",
+    love:"関係が実を結ぶ。次の段階へ。", work:"総仕上げの時。成果を受け取って。", money:"回収期。努力がお金に変わる。", act:"成果を遠慮なく受け取る" },
+  { ph:"感謝", tone:"和", all:"人に恵まれる年。縁そのものが財産になり、支えられて伸びます。",
+    love:"紹介・再会から縁が生まれやすい。", work:"協力で大きく前進。独りで抱えないで。", money:"人が運を運んでくる。", act:"感謝を言葉にして伝える" },
+  { ph:"静寂", tone:"静", all:"立ち止まる年。外へ広げるより、内を深める充電と見直しの時。",
+    love:"関係を見つめ直す時期。焦りは禁物。", work:"守りと土台固め。無理な拡大は避けて。", money:"守備的に。大きな勝負は控えめに。", act:"ひとりの時間を大切にする" },
+  { ph:"整理", tone:"静", all:"手放しの年。不要なものを手放すほど、心も暮らしも軽くなります。",
+    love:"合わない関係を静かに整理。", work:"断捨離と見直しが吉。棚卸しを。", money:"固定費の見直しで巡りが良くなる。", act:"思いきって手放す" },
+  { ph:"休息", tone:"陰", all:"休む年。無理は禁物。心身を回復させることが、次の飛躍を用意します。",
+    love:"焦らず自分を満たすことを優先。", work:"ペース配分を大切に。踏ん張りすぎない。", money:"守り。健康への投資が吉。", act:"しっかり心身を休める" },
+  { ph:"兆し", tone:"静", all:"予感の年。表面は静かでも、水面下で次への胎動が始まっています。",
+    love:"気になる人の予兆。直感を信じて。", work:"次の展開の準備を整える時。", money:"仕込みの時期。情報を集めて。", act:"直感やひらめきを書き留める" },
+  { ph:"転換", tone:"動", all:"節目・変化の年。環境が大きく動き、新しい流れへ切り替わります。",
+    love:"関係が動く。決断の時が来ることも。", work:"転職・異動・独立など変化に好機。", money:"動くお金の年。使いどころを見極めて。", act:"変化を怖がらず受け入れる" },
+];
+
+const SEASON_COLOR = ["--spring","--summer","--autumn","--winter"];
+const SEASON_NAME  = ["春","夏","秋","冬"];
+const LUCKY = [
+  {n:"若草色", c:"#8FB552"}, {n:"紅緋（べにひ）", c:"#C4453B"},
+  {n:"金茶（きんちゃ）", c:"#C1782B"}, {n:"瑠璃色（るり）", c:"#3C5C79"},
+];
+
+/* ================= エンジン ================= */
+function jdn(y,m,d){const a=Math.floor((14-m)/12),yy=y+4800-a,mm=m+12*a-3;
+  return d+Math.floor((153*mm+2)/5)+365*yy+Math.floor(yy/4)-Math.floor(yy/100)+Math.floor(yy/400)-32045;}
+function diagnose(y,m,d){
+  const n=((jdn(y,m,d)%60)+60)%60;         // 0..59
+  return { idx:Math.floor(n/5), phase:n%5, depth:n+1, yang:(y%2!==0) };
+}
+// 指定年の運気フェーズ（陰陽で巡り方が反転）
+function cyclePhase(y,m,d, targetYear){
+  const g=diagnose(y,m,d);
+  const off = g.yang ? 0 : 6;              // 陰は対極の位相からスタート
+  const idx = ((targetYear - y) + g.idx + off) % 12;
+  return (idx+12)%12;
+}
+
+/* ================= 相性 ================= */
+const SEASON_COMP={0:2,2:0,1:3,3:1};
+function compat(i,j){
+  const sa=Math.floor(i/3),sb=Math.floor(j/3),ra=i%3,rb=j%3;
+  let sd=Math.abs(sa-sb); sd=Math.min(sd,4-sd);       // 0,1,2
+  if(i===j) return {m:1,label:"鏡合わせ",note:"似た者同士。深く理解し合える反面、慣れ合いには注意。同じ弱点を持つので支え合いを意識して。"};
+  if(sd===0) return {m:0,label:"調和",note:"同じ季節どうし。自然と波長が合い、一緒にいて安心できる心地よい相性です。"};
+  if(sd===2&&ra===rb) return {m:0,label:"惹かれ合う",note:"対極の季節で同じ役割を持つ運命的な組み合わせ。足りないものを互いに満たし合えます。"};
+  if(sd===2) return {m:1,label:"補完",note:"正反対の気質。違いは大きいけれど、認め合えれば大きく成長できる関係です。"};
+  if(sd===1&&ra===rb) return {m:1,label:"移ろい",note:"隣り合う季節。温度感が近く、無理なく寄り添える穏やかな相性です。"};
+  return {m:2,label:"学びの縁",note:"季節も役割も異なる二人。理解には歩み寄りが要りますが、その分だけ学びの多い縁です。"};
+}
+
+/* ================= 円環 ================= */
+const wheelTerms=TYPES.map(t=>t.name);const R=112;const svg=document.getElementById('wheel');
+(function(){let h="";for(let i=0;i<12;i++){const ang=(i/12)*2*Math.PI-Math.PI/2,x=Math.cos(ang),y=Math.sin(ang);
+  h+=`<line class="spoke" x1="${x*40}" y1="${y*40}" x2="${x*(R-22)}" y2="${y*(R-22)}"/>`;
+  h+=`<circle cx="${x*(R-22)}" cy="${y*(R-22)}" r="3" fill="var(${SEASON_COLOR[Math.floor(i/3)]})"/>`;
+  h+=`<text class="term" id="term-${i}" x="${x*(R+14)}" y="${y*(R+14)+5}" text-anchor="middle">${wheelTerms[i]}</text>`;}
+  h+=`<circle class="marker" id="marker" r="16"/><circle cx="0" cy="0" r="30" fill="none" stroke="var(--line)"/>`;
+  h+=`<text class="core" id="core" x="0" y="6" text-anchor="middle" font-size="16">巡</text>`;svg.innerHTML=h;})();
+function highlightWheel(i){for(let k=0;k<12;k++)document.getElementById('term-'+k).classList.toggle('on',k===i);
+  const ang=(i/12)*2*Math.PI-Math.PI/2,mk=document.getElementById('marker');
+  mk.setAttribute('cx',Math.cos(ang)*(R+14));mk.setAttribute('cy',Math.sin(ang)*(R+14)-2);mk.classList.add('show');
+  document.getElementById('core').textContent=wheelTerms[i][0];}
+
+/* ================= マトリクス描画 ================= */
+(function buildMatrix(){
+  const t=document.getElementById('matrix');const short=TYPES.map(x=>x.name);
+  let h="<tr><th class='corner'></th>";
+  for(let j=0;j<12;j++)h+=`<th data-col="${j}">${short[j]}</th>`;h+="</tr>";
+  for(let i=0;i<12;i++){h+=`<tr data-row="${i}"><th class='rowh'>${short[i]}</th>`;
+    for(let j=0;j<12;j++){const c=compat(i,j);const mk=c.m===0?"◎":c.m===1?"○":"△";
+      const self=i===j?" self":"";
+      h+=`<td class="m${c.m}${self}" data-i="${i}" data-j="${j}">${mk}</td>`;}
+    h+="</tr>";}
+  t.innerHTML=h;
+  t.addEventListener('click',e=>{const td=e.target.closest('td[data-i]');if(!td)return;
+    document.querySelectorAll('#matrix td.sel').forEach(x=>x.classList.remove('sel'));td.classList.add('sel');
+    const i=+td.dataset.i,j=+td.dataset.j,c=compat(i,j);
+    document.getElementById('mdetail').innerHTML=
+      `<div class="pair"><em>${TYPES[i].name}</em> × <em>${TYPES[j].name}</em></div>`+
+      `<span class="lbl">${c.m===0?"◎ ":c.m===1?"○ ":"△ "}${c.label}</span><p>${c.note}</p>`;});
+})();
+
+/* ================= 画面制御 ================= */
+const $=id=>document.getElementById(id);
+function validDate(y,m,d){if(![y,m,d].every(Number.isInteger))return false;
+  if(y<1900||y>2100||m<1||m>12||d<1||d>31)return false;
+  const dt=new Date(y,m-1,d);return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;}
+
+function render(y,m,d){
+  const g=diagnose(y,m,d);const t=TYPES[g.idx];const season=Math.floor(g.idx/3);
+  const col=`var(${SEASON_COLOR[season]})`;
+  document.documentElement.style.setProperty('--accent',col);
+  const tint=['rgba(110,154,78,.10)','rgba(190,64,56,.09)','rgba(193,120,43,.10)','rgba(60,92,121,.10)'][season];
+  document.documentElement.style.setProperty('--tint',tint);
+
+  $('seasonTag').textContent=t.tag;$('typeName').textContent=t.name;$('typeYomi').textContent=t.yomi;
+  $('essence').textContent=t.ess;$('depthNum').textContent=g.depth;
+  $('yinyang').textContent=g.yang?"・陽数生まれ（動から巡る）":"・陰数生まれ（静から巡る）";
+  $('rSei').textContent=t.sei;$('rRen').textContent=t.ren;$('rShi').textContent=t.shi;$('rKai').textContent=t.kai;
+
+  // 深度フェーズ
+  const ph=PHASES[g.phase];$('phName').textContent=`${t.name}・${ph.name}`;$('phTtl').textContent=ph.ttl;$('phDesc').textContent=ph.desc;
+
+  // 恋愛 深掘り
+  const lv=LOVE[g.idx];
+  $('lvFall').textContent=lv.fall;$('lvHon').textContent=lv.hon;$('lvCool').textContent=lv.cool;
+  $('lvMar').textContent=lv.mar;$('lvCap').textContent=lv.cap;
+  // 恋の見頃：2026〜2033で運気が高まる年を抽出
+  const peaks=[];
+  for(let yr=2026;yr<=2033;yr++){const ph=cyclePhase(y,m,d,yr);if(LOVE_PEAK[ph])peaks.push({yr,lbl:LOVE_PEAK[ph],ph});}
+  let peakHtml="";
+  if(peaks.length){peaks.slice(0,4).forEach(p=>{const top=(p.ph===3)?" top":"";
+    peakHtml+=`<div class="chip${top}"><div class="cy">${p.yr}</div><div class="cl">${p.lbl}</div></div>`;});}
+  else{peakHtml=`<div class="none">近い数年は“育てる時期”。焦らず縁を耕すのが吉です。</div>`;}
+  $('lvPeak').innerHTML=peakHtml;
+  // 開くたびリセット（前回開いた状態を引き継がない）
+  $('loveMore').classList.remove('open');$('loveToggle').textContent="＋ 恋愛をもっと詳しく";
+
+  // 運気リズム 2024-2028
+  $('rhythmNote').textContent=`${g.yang?"陽数":"陰数"}生まれのあなたは、下の巡りで運気が流れます。`;
+  const years=[2024,2025,2026,2027,2028];let rh="";
+  years.forEach(yr=>{const p=CYCLE[cyclePhase(y,m,d,yr)];const now=yr===2026?" now":"";
+    rh+=`<div class="ryear${now}"><div class="yy">${yr}</div><div class="ph">${p.ph}</div></div>`;});
+  $('rhythm').innerHTML=rh;
+
+  // 2026
+  const p26=CYCLE[cyclePhase(y,m,d,2026)];
+  $('y26ph').textContent=`「${p26.ph}」の年`;$('y26all').textContent=p26.all;$('y26love').textContent=p26.love;
+  $('y26work').textContent=p26.work;$('y26money').textContent=p26.money;$('y26act').textContent=p26.act;
+  const lk=LUCKY[season];$('y26color').innerHTML=`<span class="swatch" style="background:${lk.c}"></span>${lk.n}`;
+
+  // 相性サマリ
+  const wa=[];for(let r=0;r<3;r++){const jj=season*3+r;if(jj!==g.idx)wa.push(TYPES[jj].name);}
+  $('aWa').textContent=wa.join("・");
+  $('aHi').textContent=TYPES[SEASON_COMP[season]*3+(g.idx%3)].name;
+
+  // マトリクスで自分の行をハイライト
+  document.querySelectorAll('#matrix tr.hl').forEach(x=>x.classList.remove('hl'));
+  document.querySelectorAll('#matrix td.colhl').forEach(x=>x.classList.remove('colhl'));
+  const row=document.querySelector(`#matrix tr[data-row="${g.idx}"]`);if(row)row.classList.add('hl');
+
+  highlightWheel(g.idx);
+  const res=$('result');res.classList.add('show');res.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+$('cast').addEventListener('click',()=>{
+  const y=parseInt($('y').value,10),m=parseInt($('m').value,10),d=parseInt($('d').value,10);
+  if(!validDate(y,m,d)){$('err').textContent='生年月日を正しく入力してください（例：1990 / 6 / 25）。';return;}
+  $('err').textContent='';render(y,m,d);});
+$('again').addEventListener('click',()=>{
+  $('result').classList.remove('show');
+  document.documentElement.style.setProperty('--accent','var(--ink)');
+  document.documentElement.style.setProperty('--tint','transparent');
+  document.getElementById('marker').classList.remove('show');
+  for(let k=0;k<12;k++)document.getElementById('term-'+k).classList.remove('on');
+  document.getElementById('core').textContent='巡';
+  window.scrollTo({top:0,behavior:'smooth'});$('y').focus();});
+$('loveToggle').addEventListener('click',()=>{const m=$('loveMore'),open=m.classList.toggle('open');
+  $('loveToggle').textContent=open?"− 閉じる":"＋ 恋愛をもっと詳しく";});
+['y','m','d'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter')$('cast').click();}));
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
