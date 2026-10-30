@@ -1,0 +1,14 @@
+# ましろ（Threads）— キャラ設定が決まるまで enabled: false のまま
+id: mashiro
+display_name: ましろ
+platform: threads
+enabled: false
+auto_approve: false
+token_secret: THREADS_TOKEN_MASHIRO
+post_times: ["12:00", "20:00"]
+persona: |
+  （ここにましろの人物像・口調・一人称・絵文字の使い方などを書く）
+themes:
+  - （よく投稿するテーマ）
+rules:
+  - （絶対にやらないこと）

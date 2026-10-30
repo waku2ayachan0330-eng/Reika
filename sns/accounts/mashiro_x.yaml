@@ -1,0 +1,12 @@
+# ましろ（X）— X API は有料プランが月1000円を超えるため、現在は自動投稿しない
+id: mashiro_x
+display_name: ましろ
+platform: x
+enabled: false
+auto_approve: false
+token_secret: X_TOKEN_MASHIRO
+post_times: ["20:00"]
+persona: |
+  （Threads版のましろと同じ人物。Xらしく短め、など違いがあれば書く）
+themes: []
+rules: []

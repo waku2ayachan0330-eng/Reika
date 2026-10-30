@@ -1,0 +1,26 @@
+# Threads のトークンは60日で切れるので、毎月1日と15日に延長する。
+name: SNS トークン延長
+on:
+  schedule:
+    - cron: "17 3 1,15 * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r sns/requirements.txt
+      - name: トークンを延長して Secrets を更新する
+        env:
+          GH_TOKEN: ${{ secrets.SECRETS_PAT }}
+          THREADS_TOKEN_REIKA: ${{ secrets.THREADS_TOKEN_REIKA }}
+          THREADS_TOKEN_MAKO: ${{ secrets.THREADS_TOKEN_MAKO }}
+          THREADS_TOKEN_RIKO: ${{ secrets.THREADS_TOKEN_RIKO }}
+          THREADS_TOKEN_MASHIRO: ${{ secrets.THREADS_TOKEN_MASHIRO }}
+        run: python sns/refresh_tokens.py

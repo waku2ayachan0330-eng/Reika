@@ -1,0 +1,8 @@
+# Claude API の月間予算（米ドル）。
+# Claude API は有料のため、0 のあいだは自動生成をしない（＝課金されない）。
+# ⚠️ ここを 0 より大きくするのは、オーナーが課金を承認したときだけ。
+monthly_budget_usd: 0
+model: claude-opus-5-5
+effort: low
+# 1回の生成で使える出力トークンの上限（費用の上限計算にも使う）
+max_tokens: 4000

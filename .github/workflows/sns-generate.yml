@@ -1,0 +1,55 @@
+# 翌日分の投稿案を Claude API で作る。承認が必要なものは PR にまとめる（マージ = 承認）。
+# Claude API は有料のため、オーナーが課金を承認するまでは定期実行しない。
+# 承認後に、下の schedule の行のコメントを外し、sns/config.yaml の予算を設定する。
+name: SNS 投稿案を作る
+on:
+  # schedule:
+  #   - cron: "13 9 * * *" # 毎日 18:13 JST
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: sns-main
+  cancel-in-progress: false
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: sns/requirements.txt
+      - run: pip install -r sns/requirements.txt
+      - name: 下書きを作る
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python sns/generate.py --out build
+      - name: 承認不要の投稿を予約し、承認が必要な投稿を PR にする
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          if [ -d build/auto ]; then cp -r build/auto/. sns/queue/; fi
+          git add sns/queue sns/usage
+          if ! git diff --cached --quiet; then
+            git commit -m "SNS: 承認不要の投稿を予約"
+            git push origin HEAD:main
+          fi
+          if [ -d build/review ]; then
+            day=$(ls build/review | head -1)
+            branch="sns/drafts-$day"
+            git switch -c "$branch"
+            cp -r build/review/. sns/queue/
+            git add sns/queue
+            git commit -m "SNS: $day の投稿案"
+            git push -u origin "$branch"
+            gh pr create --base main --head "$branch" --title "投稿案 $day" --body-file build/pr_body.md
+          fi
+      - name: 作れなかったものがあれば失敗にして通知する
+        run: |
+          if [ -f build/errors.txt ]; then cat build/errors.txt; exit 1; fi
